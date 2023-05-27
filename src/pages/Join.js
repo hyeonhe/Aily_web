@@ -15,6 +15,7 @@ import eyeOff from "../img/join/eye-off.svg";
 import { useEffect, useState } from "react";
 import titleLogo from "../img/title_logo.svg";
 import ErrorText from "../components/UI/ErrorText";
+import useValidation from "../hooks/use-validation";
 
 function Join() {
   const [passwordShown, setPasswordShown] = useState(false);
@@ -29,16 +30,6 @@ function Join() {
     gender: "",
   });
 
-  const [hasErrors, setHasErros] = useState({
-    email: false,
-    password: false,
-    checkPassword: false,
-    nickname: false,
-    phonenumber: false,
-    birth: false,
-    gender: false,
-  });
-
   function passwordEyeHandler() {
     setPasswordShown((prev) => !prev);
   }
@@ -51,45 +42,42 @@ function Join() {
     console.log(formData);
   }, [formData]);
 
-  useEffect(() => {
-    console.log(hasErrors);
-  }, [hasErrors]);
-
   console.log("re");
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const [isEmailValid, emailValidate] = useValidation(emailRegex);
   const onChangeEmail = (e) => {
-    // 이메일 검사: 올바른 형식이어야 함
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
-    if (!emailRegex.test(value)) {
-      setHasErros({ ...hasErrors, [name]: true });
-    } else {
-      setHasErros({ ...hasErrors, [name]: false });
-    }
+    emailValidate(value);
   };
 
+  const passwordRegex =
+    /^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{8,16}$/;
+  const [isPasswordValid, passwordValidate] = useValidation(passwordRegex);
   const onChangePassword = (e) => {
-    // 8자 이상, 16자 이하의 비밀번호
-    const passwordRegex =
-      /^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{8,16}$/;
-
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
-    if (!passwordRegex.test(value)) {
-      setHasErros({ ...hasErrors, password: true });
-    } else {
-      setHasErros({ ...hasErrors, password: false });
-    }
+    passwordValidate(value);
   };
 
+  const passwordCheck = (v) => {
+    if (formData.password === v){
+      return true
+    }
+    else{
+      return false
+    }
+  }
+  const [isPasswordCheckValid, passwordCheckValidate] =useValidation(null, passwordCheck);
   const onChangeCheckPassword = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -97,13 +85,19 @@ function Join() {
       [name]: value,
     }));
 
-    if (formData.password !== value) {
-      setHasErros({ ...hasErrors, checkPassword: true });
-    } else {
-      setHasErros({ ...hasErrors, checkPassword: false });
-    }
+    passwordCheckValidate(value);
   };
 
+  const nameCheck = (v) =>{
+    if(v.trim() === ''){
+      return true
+    }
+    else{
+      return false
+    }
+  }
+
+  const [isNameValid, nameValidate] = useValidation(null, nameCheck);
   const onChangeName = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -111,42 +105,32 @@ function Join() {
       [name]: value,
     }));
 
-    if (value.trim() === "") {
-      setHasErros({ ...hasErrors, nickname: true });
-    } else {
-      setHasErros({ ...hasErrors, nickname: false });
-    }
+    nameValidate(value);
   };
 
+  const phoneRegex = /^01(?:0|1|[6-9])\d{4}\d{4}$/;
+  const [isPhoneValid, phoneValidate] = useValidation(phoneRegex);
   const onChangePhone = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-
-    const phoneRegex = /^01(?:0|1|[6-9])\d{4}\d{4}$/;
-    if (!phoneRegex.test(value)) {
-      setHasErros({ ...hasErrors, phonenumber: true });
-    } else {
-      setHasErros({ ...hasErrors, phonenumber: false });
-    }
+    
+    phoneValidate(value);
   };
-
+  
+  const birthRegex =
+  /^(?:(?:19|20)\d{2})(?:(?:(?:0[1-9]|1[0-2])(?:0[1-9]|1\d|2[0-8]))|(?:02(?:29))|(?:(?:0[13-9]|1[0-2])(?:29|30))|(?:0[13578]|1[02])31)$/;
+  const [isBirthValid, birthValidate] = useValidation(birthRegex);
   const onChangeBirth = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-
-    const birthRegex =
-      /^(?:(?:19|20)\d{2})(?:(?:(?:0[1-9]|1[0-2])(?:0[1-9]|1\d|2[0-8]))|(?:02(?:29))|(?:(?:0[13-9]|1[0-2])(?:29|30))|(?:0[13578]|1[02])31)$/;
-    if (!birthRegex.test(value)) {
-      setHasErros({ ...hasErrors, birth: true });
-    } else {
-      setHasErros({ ...hasErrors, birth: false });
-    }
+    
+    birthValidate(value);
   };
 
   const onChangeGender = (e) => {
@@ -184,7 +168,7 @@ function Join() {
               />
               <Button value="인증" />
             </div>
-            {hasErrors.email && (
+            {!isEmailValid && (
               <ErrorText text="올바른 이메일 형식을 입력해주세요." />
             )}
             <div className={classes.formControl}>
@@ -205,10 +189,10 @@ function Join() {
                 />
               </div>
             </div>
-            {hasErrors.password && (
+            {!isPasswordValid && (
               <ErrorText text="비밀번호는 8자리 이상, 16자 이하여야 합니다." />
             )}
-            {hasErrors.password && (
+            {!isPasswordValid && (
               <ErrorText text="영문/숫자/특수문자(공백 제외)를 포함하여야 합니다." />
             )}
             <div className={classes.formControl}>
@@ -229,7 +213,7 @@ function Join() {
                 />
               </div>
             </div>
-            {hasErrors.checkPassword && (
+            {!isPasswordCheckValid && (
               <ErrorText text="비밀번호가 일치하지 않습니다." />
             )}
             <div className={classes.formControl}>
@@ -243,7 +227,7 @@ function Join() {
                 onChange={onChangeName}
               />
             </div>
-            {hasErrors.nickname && <ErrorText text="이름을 입력해주세요." />}
+            {!isNameValid && <ErrorText text="이름을 입력해주세요." />}
             <div className={classes.formControl}>
               <IconBox img={phone} />
               <input
@@ -254,7 +238,7 @@ function Join() {
                 onChange={onChangePhone}
               />
             </div>
-            {hasErrors.phonenumber && (
+            {!isPhoneValid && (
               <ErrorText text="올바른 휴대폰 번호를 입력해주세요." />
             )}
             <div className={classes.formControl}>
@@ -267,7 +251,7 @@ function Join() {
                 onChange={onChangeBirth}
               />
             </div>
-            {hasErrors.birth && (
+            {!isBirthValid && (
               <ErrorText text="생년월일을 다시 확인해주세요." />
             )}
             {/* 성별은 선택사항 */}
