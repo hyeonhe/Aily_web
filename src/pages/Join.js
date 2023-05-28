@@ -15,21 +15,11 @@ import eyeOff from "../img/join/eye-off.svg";
 import { useEffect, useState } from "react";
 import titleLogo from "../img/title_logo.svg";
 import ErrorText from "../components/UI/ErrorText";
-import useValidation from "../hooks/use-validation";
+import useFormValidation from "../hooks/use-formValidation";
 
 function Join() {
   const [passwordShown, setPasswordShown] = useState(false);
   const [checkPasswordShown, setCheckPasswordShown] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    checkPassword: "",
-    nickname: "",
-    phonenumber: "",
-    birth: "",
-    gender: "",
-  });
-
   function passwordEyeHandler() {
     setPasswordShown((prev) => !prev);
   }
@@ -37,39 +27,7 @@ function Join() {
     setCheckPasswordShown((prev) => !prev);
   }
 
-  // 값 변화에 따라 콘솔에 출력
-  useEffect(() => {
-    console.log(formData);
-  }, [formData]);
-
-  console.log("re");
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const [isEmailValid, emailValidate] = useValidation(emailRegex);
-  const onChangeEmail = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    emailValidate(value);
-  };
-
-  const passwordRegex =
-    /^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{8,16}$/;
-  const [isPasswordValid, passwordValidate] = useValidation(passwordRegex);
-  const onChangePassword = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    passwordValidate(value);
-  };
-
-  const passwordCheck = (v) => {
+  const checkPassword = (v) => {
     if (formData.password === v){
       return true
     }
@@ -77,69 +35,40 @@ function Join() {
       return false
     }
   }
-  const [isPasswordCheckValid, passwordCheckValidate] =useValidation(null, passwordCheck);
-  const onChangeCheckPassword = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    passwordCheckValidate(value);
-  };
-
-  const nameCheck = (v) =>{
-    if(v.trim() === ''){
-      return true
-    }
-    else{
-      return false
-    }
-  }
-
-  const [isNameValid, nameValidate] = useValidation(null, nameCheck);
-  const onChangeName = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    nameValidate(value);
-  };
-
-  const phoneRegex = /^01(?:0|1|[6-9])\d{4}\d{4}$/;
-  const [isPhoneValid, phoneValidate] = useValidation(phoneRegex);
-  const onChangePhone = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    
-    phoneValidate(value);
-  };
   
-  const birthRegex =
-  /^(?:(?:19|20)\d{2})(?:(?:(?:0[1-9]|1[0-2])(?:0[1-9]|1\d|2[0-8]))|(?:02(?:29))|(?:(?:0[13-9]|1[0-2])(?:29|30))|(?:0[13578]|1[02])31)$/;
-  const [isBirthValid, birthValidate] = useValidation(birthRegex);
-  const onChangeBirth = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    
-    birthValidate(value);
-  };
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordRegex =
+  /^(?=.*[a-zA-z])(?=.*[0-9])(?=.*[$`~!@$!%*#^?&\\(\\)\-_=+]).{8,16}$/;
+  const nameRegex = /^[a-zA-Z가-힣]{2,50}$/;
+  const phoneRegex = /^01(?:0|1|[6-9])\d{4}\d{4}$/;
+  const birthRegex = /^(?:(?:19|20)\d{2})(?:(?:(?:0[1-9]|1[0-2])(?:0[1-9]|1\d|2[0-8]))|(?:02(?:29))|(?:(?:0[13-9]|1[0-2])(?:29|30))|(?:0[13578]|1[02])31)$/;
 
-  const onChangeGender = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+const validationRules = {
+  email: (value) => emailRegex.test(value),
+  password: (value) => passwordRegex.test(value),
+  checkPassword: (value) => checkPassword(value),
+  nickname: (value) => nameRegex.test(value),
+  phonenumber: (value) => phoneRegex.test(value),
+  birth: (value) => birthRegex.test(value),
+  gender:()=>{},
+}
+
+  const [
+    formData,
+    errors,
+    onChangeHandler
+   ] = useFormValidation(validationRules);
+
+
+  // 값 변화에 따라 콘솔에 출력
+  useEffect(() => {
+    console.log(formData);
+    console.log(errors)
+  }, [formData, errors]);
+
+  useEffect(()=>{
+  console.log(errors)},[errors])
+
 
   function joinHander(event) {
     event.preventDefault();
@@ -164,11 +93,11 @@ function Join() {
                 className={`${classes.input} ${classes.shortInput}`}
                 name="email"
                 value={formData.email}
-                onChange={onChangeEmail}
+                onChange={onChangeHandler}
               />
               <Button value="인증" />
             </div>
-            {!isEmailValid && (
+            {errors.email && (
               <ErrorText text="올바른 이메일 형식을 입력해주세요." />
             )}
             <div className={classes.formControl}>
@@ -180,7 +109,7 @@ function Join() {
                   className={classes.password_input}
                   name="password"
                   value={formData.password}
-                  onChange={onChangePassword}
+                  onChange={onChangeHandler}
                 />
                 <img
                   src={passwordShown ? eyeOn : eyeOff}
@@ -189,13 +118,13 @@ function Join() {
                 />
               </div>
             </div>
-            {!isPasswordValid && (
+            {errors.password && (
               <ErrorText text="비밀번호는 8자리 이상, 16자 이하여야 합니다." />
             )}
-            {!isPasswordValid && (
+            {errors.password && (
               <ErrorText text="영문/숫자/특수문자(공백 제외)를 포함하여야 합니다." />
             )}
-            <div className={classes.formControl}>
+             <div className={classes.formControl}>
               <IconBox img={lockCheck} />
               <div className={classes.password}>
                 <input
@@ -204,7 +133,7 @@ function Join() {
                   className={classes.password_input}
                   name="checkPassword"
                   value={formData.checkPassword}
-                  onChange={onChangeCheckPassword}
+                  onChange={onChangeHandler}
                 />
                 <img
                   src={checkPasswordShown ? eyeOn : eyeOff}
@@ -213,7 +142,7 @@ function Join() {
                 />
               </div>
             </div>
-            {!isPasswordCheckValid && (
+            {errors.checkPassword && (
               <ErrorText text="비밀번호가 일치하지 않습니다." />
             )}
             <div className={classes.formControl}>
@@ -224,10 +153,10 @@ function Join() {
                 className={`${classes.input} ${classes.longInput}`}
                 name="nickname"
                 value={formData.nickname}
-                onChange={onChangeName}
+                onChange={onChangeHandler}
               />
             </div>
-            {!isNameValid && <ErrorText text="이름을 입력해주세요." />}
+            {errors.nickname && <ErrorText text="이름을 입력해주세요." />}
             <div className={classes.formControl}>
               <IconBox img={phone} />
               <input
@@ -235,10 +164,10 @@ function Join() {
                 className={classes.input}
                 name="phonenumber"
                 value={formData.phonenumber}
-                onChange={onChangePhone}
+                onChange={onChangeHandler}
               />
             </div>
-            {!isPhoneValid && (
+            {errors.phonenumber && (
               <ErrorText text="올바른 휴대폰 번호를 입력해주세요." />
             )}
             <div className={classes.formControl}>
@@ -248,10 +177,10 @@ function Join() {
                 className={classes.input}
                 name="birth"
                 value={formData.birth}
-                onChange={onChangeBirth}
+                onChange={onChangeHandler}
               />
             </div>
-            {!isBirthValid && (
+            {errors.birth && (
               <ErrorText text="생년월일을 다시 확인해주세요." />
             )}
             {/* 성별은 선택사항 */}
@@ -260,7 +189,7 @@ function Join() {
               <select
                 className={classes.input}
                 value={formData.gender}
-                onChange={onChangeGender}
+                onChange={onChangeHandler}
                 name="gender"
               >
                 <option value="" defaultChecked disabled>
@@ -269,7 +198,7 @@ function Join() {
                 <option value="M">남자</option>
                 <option value="F">여자</option>
               </select>
-            </div>
+            </div> 
 
             <input type="submit" value="회원가입" id={classes.submit} />
           </form>
